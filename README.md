@@ -4,7 +4,18 @@ A full-stack machine learning project that trains a neural network to solve Word
 
 **Live Demo → [wordle-solver-tan.vercel.app](https://wordle-solver-tan.vercel.app)**
 
-![Wordle Solver Demo](https://img.shields.io/badge/Win%20Rate-100%25-brightgreen) ![Avg Turns](https://img.shields.io/badge/Avg%20Turns-3.46-blue) ![Model](https://img.shields.io/badge/Model-HuggingFace-yellow)
+![Win Rate](https://img.shields.io/badge/Win%20Rate-100%25-brightgreen) ![Avg Turns](https://img.shields.io/badge/Avg%20Turns-3.46-blue) ![Model](https://img.shields.io/badge/Model-HuggingFace-yellow)
+
+---
+
+## Links
+
+| | |
+|---|---|
+| 🌐 Live App | [wordle-solver-tan.vercel.app](https://wordle-solver-tan.vercel.app) |
+| 🤗 Model | [huggingface.co/sato2ru/wordle-solver](https://huggingface.co/sato2ru/wordle-solver) |
+| 🎮 Gradio Demo | [huggingface.co/spaces/sato2ru/wordle](https://huggingface.co/spaces/sato2ru/wordle) |
+| ⚙️ Backend Repo | [github.com/Jeanwrld/wordle-api](https://github.com/Jeanwrld/wordle-api) |
 
 ---
 
@@ -15,7 +26,7 @@ The model is trained via **supervised learning on entropy-optimal move data**. T
 
 $$E[\text{Info}(guess)] = \sum_{p} P(p) \cdot \log_2\left(\frac{1}{P(p)}\right)$$
 
-Where $P(p)$ is the probability of each colour pattern given the remaining possible words. The guess that maximises this expected entropy cuts the possibility space in half the most efficiently.
+Where $P(p)$ is the probability of each colour pattern given the remaining possible words. The guess that maximises this expected entropy cuts the possibility space the most efficiently on average.
 
 ### Pipeline
 
@@ -41,7 +52,7 @@ Where $P(p)$ is the probability of each colour pattern given the remaining possi
 ### Board Encoding
 Each game state is encoded as a 390-dimensional binary vector:
 - 26 letters × 5 positions × 3 states (grey/yellow/green)
-- A `1` at position `letter * 15 + pos * 3 + state` means that letter was seen at that position with that colour
+- A `1` at index `letter * 15 + pos * 3 + state` means that letter was seen at that position with that colour
 
 ---
 
@@ -51,8 +62,8 @@ Each game state is encoded as a 390-dimensional binary vector:
 |--------|-------|
 | Win rate | **100.0%** |
 | Average turns | **3.460** |
-| Solved in ≤3 | 53.8% |
-| Solved in ≤4 | 97.5% |
+| Solved in ≤ 3 | 53.8% |
+| Solved in ≤ 4 | 97.5% |
 | Failures | 0 |
 
 Turn distribution across all 2,315 answers:
@@ -71,12 +82,13 @@ FAILED :    0
 
 ## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Model training | Python, PyTorch, Google Colab |
-| Model hosting | Hugging Face Hub |
-| Backend API | FastAPI, Railway |
-| Frontend | React, Vercel |
+| Layer | Technology | Hosting |
+|-------|-----------|---------|
+| Model training | Python, PyTorch | Google Colab |
+| Model weights | Hugging Face Hub | [sato2ru/wordle-solver](https://huggingface.co/sato2ru/wordle-solver) |
+| Backend API | FastAPI | Railway |
+| Frontend | React | Vercel |
+| Gradio demo | Gradio | HF Spaces |
 
 ---
 
@@ -92,15 +104,14 @@ wordle-solver/
 │   ├── Phase 4: Push to Hugging Face Hub
 │   └── Phase 5: Deploy Gradio app to HF Spaces
 │
-├── wordle-api/              # FastAPI backend (deployed on Railway)
-│   ├── main.py              # API routes + model inference
-│   ├── requirements.txt
-│   └── Procfile
+├── wordle-ui/               # React frontend (deployed on Vercel)
+│   └── src/
+│       └── App.js           # Full UI — board, suggestions, pattern picker
 │
-└── wordle-ui/               # React frontend (deployed on Vercel)
-    └── src/
-        └── App.js           # Full UI with board, suggestions, pattern picker
+└── README.md
 ```
+
+> Backend code lives in a separate repo → [github.com/Jeanwrld/wordle-api](https://github.com/Jeanwrld/wordle-api)
 
 ---
 
@@ -108,6 +119,7 @@ wordle-solver/
 
 ### Backend
 ```bash
+git clone https://github.com/Jeanwrld/wordle-api
 cd wordle-api
 pip install -r requirements.txt
 python main.py
@@ -116,13 +128,18 @@ python main.py
 
 ### Frontend
 ```bash
-cd wordle-ui
+git clone https://github.com/Jeanwrld/wordle-solver
+cd wordle-solver/wordle-ui
 npm install
 npm start
 # App runs at http://localhost:3000
 ```
 
-### API Endpoints
+---
+
+## API
+
+**Base URL:** `https://web-production-ea1d.up.railway.app`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -154,18 +171,6 @@ POST /suggest
   "message": "28 words remaining — try BOILS"
 }
 ```
-
----
-
-## Model
-
-The trained model is hosted on Hugging Face: [sato2ru/wordle-solver](https://huggingface.co/sato2ru/wordle-solver)
-
-Files:
-- `model_weights.pt` — PyTorch state dict
-- `config.json` — Model architecture config
-- `answers.json` — 2,315 possible Wordle answers
-- `allowed.json` — 12,972 valid guess words
 
 ---
 
