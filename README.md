@@ -182,7 +182,7 @@ Strategy based on [3Blue1Brown's video](https://www.youtube.com/watch?v=v68zYyaE
 
 ## Design Decisions
 
-### Why CRANE and not SALET, for a best openner
+### Why CRANE and not SALET, for a best opener
 3Blue1Brown's follow-up video points out that the mathematically optimal opener is actually **SALET** (avg ~3.42 turns) not CRANE — but only when the solver has access to the official hidden answer list.
 
 This app uses CRANE deliberately because:
