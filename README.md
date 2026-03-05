@@ -180,6 +180,21 @@ Strategy based on [3Blue1Brown's video](https://www.youtube.com/watch?v=v68zYyaE
 
 ---
 
+## Design Decisions
+
+### Why CRANE and not SALET, for a best openner
+3Blue1Brown's follow-up video points out that the mathematically optimal opener is actually **SALET** (avg ~3.42 turns) not CRANE — but only when the solver has access to the official hidden answer list.
+
+This app uses CRANE deliberately because:
+- CRANE is on the answer list — you can win in 1 guess
+- SALET is only a valid *guess*, never an answer — turn 1 win is impossible
+- The difference in average turns is negligible (3.46 vs 3.42)
+- The goal is to assist a human player, not purely minimise turns
+
+This mirrors the distinction Sanderson makes between **"computer mode"** (minimise avg turns at all costs) and **"human mode"** (use real words, play naturally).
+
+> The "best" strategy depends entirely on your goal — are you trying to win a math competition, or actually enjoy the game?
+
 ## License
 
 MIT
