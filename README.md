@@ -1,0 +1,180 @@
+# 🟩 Wordle AI Solver
+
+A full-stack machine learning project that trains a neural network to solve Wordle puzzles using information theory — achieving **100% win rate** across all 2,315 possible answers with an average of **3.46 guesses**.
+
+**Live Demo → [wordle-solver-tan.vercel.app](https://wordle-solver-tan.vercel.app)**
+
+![Wordle Solver Demo](https://img.shields.io/badge/Win%20Rate-100%25-brightgreen) ![Avg Turns](https://img.shields.io/badge/Avg%20Turns-3.46-blue) ![Model](https://img.shields.io/badge/Model-HuggingFace-yellow)
+
+---
+
+## How It Works
+
+### Strategy
+The model is trained via **supervised learning on entropy-optimal move data**. The core idea comes from information theory:
+
+$$E[\text{Info}(guess)] = \sum_{p} P(p) \cdot \log_2\left(\frac{1}{P(p)}\right)$$
+
+Where $P(p)$ is the probability of each colour pattern given the remaining possible words. The guess that maximises this expected entropy cuts the possibility space in half the most efficiently.
+
+### Pipeline
+
+```
+1. Entropy Solver (Python)
+   └─ Plays all 2,315 Wordle games optimally
+   └─ Records every (board_state → best_guess) pair
+   └─ Generates ~10,000 training samples
+
+2. Neural Network (PyTorch)
+   └─ Input:  390-dim binary board encoding
+              (26 letters × 5 positions × 3 states)
+   └─ Hidden: 512 → 512 → 256 with BatchNorm + Dropout
+   └─ Output: Probability distribution over 12,972 valid words
+   └─ Loss:   CrossEntropy vs entropy-optimal move
+
+3. Deployment
+   └─ Model weights → Hugging Face Hub
+   └─ FastAPI backend → Railway
+   └─ React frontend → Vercel
+```
+
+### Board Encoding
+Each game state is encoded as a 390-dimensional binary vector:
+- 26 letters × 5 positions × 3 states (grey/yellow/green)
+- A `1` at position `letter * 15 + pos * 3 + state` means that letter was seen at that position with that colour
+
+---
+
+## Results
+
+| Metric | Score |
+|--------|-------|
+| Win rate | **100.0%** |
+| Average turns | **3.460** |
+| Solved in ≤3 | 53.8% |
+| Solved in ≤4 | 97.5% |
+| Failures | 0 |
+
+Turn distribution across all 2,315 answers:
+
+```
+1 turn :    1
+2 turns:   59  ████████████
+3 turns: 1188  ██████████████████████████████████████████████
+4 turns: 1010  ████████████████████████████████████████
+5 turns:   56  ███████████
+6 turns:    1
+FAILED :    0
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Model training | Python, PyTorch, Google Colab |
+| Model hosting | Hugging Face Hub |
+| Backend API | FastAPI, Railway |
+| Frontend | React, Vercel |
+
+---
+
+## Project Structure
+
+```
+wordle-solver/
+│
+├── wordle_train.ipynb       # Full training pipeline (Colab)
+│   ├── Phase 1: Data generation (entropy solver)
+│   ├── Phase 2: Model training (WordleNet)
+│   ├── Phase 3: Evaluation & benchmarking
+│   ├── Phase 4: Push to Hugging Face Hub
+│   └── Phase 5: Deploy Gradio app to HF Spaces
+│
+├── wordle-api/              # FastAPI backend (deployed on Railway)
+│   ├── main.py              # API routes + model inference
+│   ├── requirements.txt
+│   └── Procfile
+│
+└── wordle-ui/               # React frontend (deployed on Vercel)
+    └── src/
+        └── App.js           # Full UI with board, suggestions, pattern picker
+```
+
+---
+
+## Running Locally
+
+### Backend
+```bash
+cd wordle-api
+pip install -r requirements.txt
+python main.py
+# API runs at http://localhost:8000
+```
+
+### Frontend
+```bash
+cd wordle-ui
+npm install
+npm start
+# App runs at http://localhost:3000
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Health check |
+| POST | `/suggest` | Get next best guess given history |
+| GET | `/opener` | Get best opening word |
+
+**Example request:**
+```json
+POST /suggest
+{
+  "history": [
+    { "word": "crane", "pattern": [0, 2, 0, 1, 0] }
+  ]
+}
+```
+
+**Example response:**
+```json
+{
+  "suggestion": "boils",
+  "top_suggestions": [
+    { "word": "boils", "entropy": 3.821, "is_possible": true },
+    { "word": "toils", "entropy": 3.764, "is_possible": true }
+  ],
+  "possible_count": 28,
+  "bits_remaining": 4.81,
+  "solved": false,
+  "message": "28 words remaining — try BOILS"
+}
+```
+
+---
+
+## Model
+
+The trained model is hosted on Hugging Face: [sato2ru/wordle-solver](https://huggingface.co/sato2ru/wordle-solver)
+
+Files:
+- `model_weights.pt` — PyTorch state dict
+- `config.json` — Model architecture config
+- `answers.json` — 2,315 possible Wordle answers
+- `allowed.json` — 12,972 valid guess words
+
+---
+
+## Inspiration
+
+Strategy based on [3Blue1Brown's video](https://www.youtube.com/watch?v=v68zYyaEmEA) — *Solving Wordle using information theory*.
+
+---
+
+## License
+
+MIT
