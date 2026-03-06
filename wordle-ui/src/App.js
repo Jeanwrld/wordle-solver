@@ -247,6 +247,7 @@ export default function App() {
 
   const loadSuggestion = async (hist) => {
     setLoading(true); setError("");
+    setSuggestions([]);
     try {
       const data = await fetchSuggestion(hist);
       setSuggestions(data.top_suggestions || []);
