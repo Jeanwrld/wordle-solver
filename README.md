@@ -179,6 +179,18 @@ POST /suggest
 Strategy based on [3Blue1Brown's video](https://www.youtube.com/watch?v=v68zYyaEmEA) — *Solving Wordle using information theory*.
 
 ---
+## The Information Theory Behind It
+
+As Charlie Eppes puts it in *Numb3rs*:
+
+> "Information theory is about getting a message from point A to point B...
+> the next word could be not anything, but a lot of things. Since there are 
+> letters more likely to be next than others — not completely random — 
+> bounded by the alphabet, further by the English language."
+
+That's exactly what entropy scoring operationalizes. Each guess isn't random, 
+it's bounded by the remaining `possible` set. The solver picks the guess that 
+collapses that uncertainty the fastest.
 
 ## Design Decisions
 
