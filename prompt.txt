@@ -1,0 +1,159 @@
+you see my proble, the word is gunky ....some suggestions..according to chatgpt
+
+The candidate selection pipeline is where the logic leaks.
+
+model → top 20 words from ALLOWED
+
+       ↓
+
+entropy scoring
+
+       ↓
+
+display top 5
+
+Notice the missing step.
+
+You never force the suggestions to come from the possible set. So the model proposes words that violate the board constraints, and the entropy scorer happily evaluates them anyway.
+
+That is why your UI shows nonsense like:
+
+AMIDS
+
+NIDUS
+
+BLOWN
+
+even though letters A, I, O, L, P were already eliminated
+
+Your only hint that something is wrong is the small "is_possible": false flag. The system knows the words are illegal — but it still shows them
+
+The exact place to fix
+
+Inside top_suggestions().
+
+You currently do:candidates = [ALLOWED[i] for i in logits.topk(20).indices.tolist()]
+
+Those are model guesses, not valid candidates.
+
+Instead you must merge the model output with the constraint-filtered pool.
+
+Replace the candidate selection with something like:
+
+possible_set = set(possible)
+
+model_words = [ALLOWED[i] for i in logits.topk(20).indices.tolist()]
+
+candidates = list(dict.fromkeys(
+
+    model_words + list(possible_set)
+
+))[:20]
+
+The second improvement (important)
+
+Right now you compute entropy for any guess. That is fine mathematically, but if your goal is showing likely solutions, then restrict the ranking:
+
+Replace:scored = [{"word": w, ...} for w in candidates] with candidates = [w for w in candidates if w in possible_set]
+
+HUNKY
+
+BUNKY
+
+GUNKY
+
+JUNKY
+
+Third small bug (UI symptom)
+
+You show HUNKY again after it was guessed. That happens because guesses are not removed from candidates.
+
+Add:guessed = {w for w,_ in history}
+
+candidates = [w for w in candidates if w not in guessed]
+
+The strongest Wordle solvers end up looking less like a “neural network that predicts words” and more like a tiny search engine for information. The trick is realizing that Wordle isn’t about guessing the answer directly. It’s about maximizing how much uncertainty collapses each turn.
+
+your current system does this:board state → neural net → guess
+
+That works, but it throws away a lot of structure that Wordle gives you for free.
+
+The architecture that consistently beats most ML-only solvers looks more like this:board state
+
+    ↓
+
+candidate answer set
+
+    ↓
+
+policy network proposes ~30 guesses
+
+    ↓
+
+exact entropy calculation
+
+    ↓
+
+choose best guess
+Think of the neural network as a search accelerator, not the decision maker.
+First ingredient: the candidate universe.
+
+At every turn you maintain the set:possible_answers
+You already do this with your filtering. If 2300 answers shrink to 12, the game is almost solved.
+
+The amount of uncertainty left is literally:bits = log2(len(possible_answers))
+Wordle starts around 11 bits of uncertainty.
+
+Every guess should ideally remove 3–5 bits.
+Second ingredient: true entropy scoring.
+For a guess g, you simulate the result against every possible answer:
+pattern = get_pattern(g, answer)
+That creates buckets:
+⬛⬛⬛⬛⬛ : 120 answers
+⬛🟨⬛⬛⬛ : 42 answers
+🟩⬛⬛🟨⬛ : 8 answers
+...
+Then compute:entropy = Σ -(p * log2 p)
+This tells you how much information the guess is expected to reveal.
+
+A perfect guess would split answers into even buckets, like a good binary search.
+Third ingredient: policy network (the smart accelerator)
+Computing entropy for all ~12,000 words every turn is expensive. So instead:
+NN(board_state) → 30 promising guesses
+Then you run exact entropy on those 30.
+
+That gives you nearly the same quality as brute force, but much faster.
+
+Your current model already acts like this — but the missing piece is forcing it to respect the candidate set.
+Fourth ingredient: solution-aware guessing.
+
+Sometimes the best entropy guess is not a valid solution.
+
+Example:
+
+Possible answers:BUNKY
+GUNKY
+HUNKY
+JUNKY
+Guessing MOUND might eliminate three at once.
+
+But humans prefer guessing HUNKY because it might solve immediately.
+
+Strong solvers blend both goals with a score like:score = entropy + λ * probability_of_being_solution
+Where λ is small.
+Fifth ingredient: endgame brute force.
+When candidates drop below ~20, the solver should switch strategy:
+for guess in candidates:
+    simulate worst-case bucket size
+choose guess minimizing worst-case
+That becomes a minimax search, guaranteeing faster solves.
+final architecture 1) Filter possible answers
+2) If <20 → minimax search
+3) Else:
+      NN proposes guesses
+      compute entropy exactly
+      combine entropy + solve probability
+      choose best
+This hybrid solver typically solves Wordle in 3.4–3.6 guesses average, which is close to the theoretical optimum.
+
+are these feasible, also i only showed gpt my main.py, do u wanna see other files, maybe the jupyter training book too https://github.com/Jeanwrld/wordle-solver
