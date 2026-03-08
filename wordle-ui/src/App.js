@@ -130,8 +130,8 @@ function HelpModal({ onClose }) {
 // ─── Model Toggle ─────────────────────────────────────────────────────────────
 function ModelToggle({ selected, onChange }) {
   const models = [
-    { id: "supervised", label: " Supervised", sublabel: "100% · 3.46 avg" },
-    { id: "rl",         label: " Reinforcement", sublabel: "98.2% · 3.75 avg" },
+    { id: "supervised", label: "Supervised model", sublabel: "100% · 3.46 avg" },
+    { id: "rl",         label: "Reinforcement model", sublabel: "98.2% · 3.75 avg" },
   ];
   return (
     <div style={{
