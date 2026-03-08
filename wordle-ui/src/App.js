@@ -488,6 +488,7 @@ export default function App() {
         )}
 
         {/* Footer */}
+       {/* Footer */}
         <div style={{
           marginTop: 36, paddingTop: 16, borderTop: "1px solid #3a3a3c",
           fontSize: 11, color: "#565758", textAlign: "center", letterSpacing: 1,
@@ -496,29 +497,23 @@ export default function App() {
             ? "Model: reinforcement learning · elite game filtering · 98.2% win rate"
             : "Model: supervised learning · entropy-optimal training data · 100% win rate"}
           <div style={{ marginTop: 6 }}>
-  <ul>
-    <li>
-      
-        href="https://github.com/Jeanwrld/wordle-solver"
-        target="_blank"
-        rel="noreferrer"
-        style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}
-      >
-        ⌥ github.com/Jeanwrld/wordle-solver
-      </a>
-    </li>
-    <li>
-      
-        href="https://jeanwrld.github.io/"
-        target="_blank"
-        rel="noreferrer"
-        style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}
-      >
-        ⌥ About Me
-      </a>
-    </li>
-  </ul>
-</div>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+              <li>
+                <a href="https://github.com/Jeanwrld/wordle-solver" target="_blank" rel="noreferrer"
+                  style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
+                  ⌥ github.com/Jeanwrld/wordle-solver
+                </a>
+              </li>
+              <li>
+                <a href="https://jeanwrld.github.io/" target="_blank" rel="noreferrer"
+                  style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
+                  ⌥ About Me
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+    
         </div>
 
       </div>
