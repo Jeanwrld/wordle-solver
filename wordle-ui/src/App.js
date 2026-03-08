@@ -496,15 +496,29 @@ export default function App() {
             ? "Model: reinforcement learning · elite game filtering · 98.2% win rate"
             : "Model: supervised learning · entropy-optimal training data · 100% win rate"}
           <div style={{ marginTop: 6 }}>
-            <a href="https://github.com/Jeanwrld/wordle-solver" target="_blank" rel="noreferrer"
-              style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
-              ⌥ github.com/Jeanwrld/wordle-solver
-            </a>
-            <a href="https://jeanwrld.github.io/" target="_blank" rel="noreferrer"
-              style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
-              ⌥ About Me
-            </a>    
-          </div>
+  <ul>
+    <li>
+      
+        href="https://github.com/Jeanwrld/wordle-solver"
+        target="_blank"
+        rel="noreferrer"
+        style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}
+      >
+        ⌥ github.com/Jeanwrld/wordle-solver
+      </a>
+    </li>
+    <li>
+      
+        href="https://jeanwrld.github.io/"
+        target="_blank"
+        rel="noreferrer"
+        style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}
+      >
+        ⌥ About Me
+      </a>
+    </li>
+  </ul>
+</div>
         </div>
 
       </div>
