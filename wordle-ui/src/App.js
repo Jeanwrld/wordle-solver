@@ -487,6 +487,7 @@ export default function App() {
         )}
 
         {/* Footer */}
+       {/* Footer */}
         <div style={{
           marginTop: 36, paddingTop: 16, borderTop: "1px solid #3a3a3c",
           fontSize: 11, color: "#565758", textAlign: "center", letterSpacing: 1,
@@ -510,6 +511,8 @@ export default function App() {
               </li>
             </ul>
           </div>
+        </div>
+    
         </div>
 
       </div>
