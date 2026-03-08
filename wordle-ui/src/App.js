@@ -279,7 +279,7 @@ export default function App() {
   const [activeModel, setActiveModel]     = useState("supervised");
   const inputRef = useRef(null);
 
-  useEffect(() => { loadSuggestion([], selectedModel); }, []);
+  useEffect(() => { loadSuggestion([], selectedModel); }, [selectedModel]);
 
   const loadSuggestion = async (hist, model) => {
     setLoading(true); setError("");
