@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 // ─── API ──────────────────────────────────────────────────────────────────────
 const API_BASE = "https://web-production-ea1d.up.railway.app";
 
-async function fetchSuggestion(history) {
-  const res = await fetch(`${API_BASE}/suggest`, {
+async function fetchSuggestion(history, model = "supervised") {
+  const res = await fetch(`${API_BASE}/suggest?model=${model}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ history }),
@@ -127,6 +127,39 @@ function HelpModal({ onClose }) {
   );
 }
 
+// ─── Model Toggle ─────────────────────────────────────────────────────────────
+function ModelToggle({ selected, onChange }) {
+  const models = [
+    { id: "supervised", label: "🧠 Supervised", sublabel: "100% · 3.46 avg" },
+    { id: "rl",         label: "🤖 Reinforcement", sublabel: "98.2% · 3.75 avg" },
+  ];
+  return (
+    <div style={{
+      display: "flex", gap: 6, background: "#1a1a1b",
+      border: "1px solid #3a3a3c", borderRadius: 8, padding: 4,
+    }}>
+      {models.map(m => {
+        const active = selected === m.id;
+        return (
+          <button key={m.id} onClick={() => onChange(m.id)} style={{
+            flex: 1, padding: "8px 12px", border: "none", borderRadius: 6,
+            cursor: "pointer", transition: "background 0.2s",
+            background: active ? "#538d4e" : "transparent",
+            fontFamily: "'Segoe UI', sans-serif",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: active ? "#ffffff" : "#818384", letterSpacing: 0.5 }}>
+              {m.label}
+            </div>
+            <div style={{ fontSize: 10, color: active ? "#ffffffaa" : "#565758", marginTop: 2 }}>
+              {m.sublabel}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Components ───────────────────────────────────────────────────────────────
 function Tile({ letter, colorState = "empty", size = 62 }) {
   const col = STATE_COLORS[colorState] || STATE_COLORS.empty;
@@ -188,27 +221,28 @@ function PatternSelector({ word, onConfirm, onCancel }) {
   );
 }
 
-function SuggestionCard({ word, entropy, isPossible, rank, onClick }) {
+function SuggestionCard({ word, entropy, isPossible, rank, onClick, modelUsed }) {
   const pct = Math.min(entropy / 6, 1);
+  const accentColor = modelUsed === "rl" ? "#b59f3b" : "#538d4e";
   return (
     <div onClick={() => onClick(word)} style={{
       display: "flex", alignItems: "center", gap: 12,
       padding: "10px 14px", borderRadius: 8, cursor: "pointer",
-      background: "#1a1a1b", border: `1px solid ${isPossible ? "#538d4e55" : "#3a3a3c"}`,
+      background: "#1a1a1b", border: `1px solid ${isPossible ? accentColor + "55" : "#3a3a3c"}`,
       transition: "border-color 0.15s, background 0.15s",
     }}
-      onMouseEnter={e => { e.currentTarget.style.background = "#252526"; e.currentTarget.style.borderColor = isPossible ? "#538d4e" : "#565758"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "#1a1a1b"; e.currentTarget.style.borderColor = isPossible ? "#538d4e55" : "#3a3a3c"; }}
+      onMouseEnter={e => { e.currentTarget.style.background = "#252526"; e.currentTarget.style.borderColor = isPossible ? accentColor : "#565758"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "#1a1a1b"; e.currentTarget.style.borderColor = isPossible ? accentColor + "55" : "#3a3a3c"; }}
     >
       <span style={{ color: "#565758", fontFamily: "monospace", fontSize: 12, width: 20 }}>{rank}.</span>
-      <span style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 17, letterSpacing: 3, color: isPossible ? "#538d4e" : "#d7dadc", flex: 1 }}>
+      <span style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 17, letterSpacing: 3, color: isPossible ? accentColor : "#d7dadc", flex: 1 }}>
         {word.toUpperCase()}
       </span>
       {isPossible && (
-        <span style={{ fontSize: 10, color: "#538d4e", background: "#538d4e22", padding: "2px 6px", borderRadius: 4 }}>POSSIBLE</span>
+        <span style={{ fontSize: 10, color: accentColor, background: accentColor + "22", padding: "2px 6px", borderRadius: 4 }}>POSSIBLE</span>
       )}
       <div style={{ width: 60, height: 3, background: "#3a3a3c", borderRadius: 2, overflow: "hidden" }}>
-        <div style={{ width: `${pct*100}%`, height: "100%", background: "#538d4e", borderRadius: 2 }} />
+        <div style={{ width: `${pct*100}%`, height: "100%", background: accentColor, borderRadius: 2 }} />
       </div>
       <span style={{ fontFamily: "monospace", fontSize: 11, color: "#818384", width: 44, textAlign: "right" }}>
         {entropy.toFixed(2)}b
@@ -241,24 +275,32 @@ export default function App() {
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState("");
   const [showHelp, setShowHelp]           = useState(false);
+  const [selectedModel, setSelectedModel] = useState("supervised");
+  const [activeModel, setActiveModel]     = useState("supervised");
   const inputRef = useRef(null);
 
-  useEffect(() => { loadSuggestion([]); }, []);
+  useEffect(() => { loadSuggestion([], selectedModel); }, []);
 
-  const loadSuggestion = async (hist) => {
+  const loadSuggestion = async (hist, model) => {
     setLoading(true); setError("");
-    
     try {
-      const data = await fetchSuggestion(hist);
+      const data = await fetchSuggestion(hist, model);
       setSuggestions(data.top_suggestions || []);
       setCurrentSuggestion(data.suggestion);
       setPossibleCount(data.possible_count);
       setBitsLeft(data.bits_remaining);
+      setActiveModel(data.model_used || model);
       if (data.solved) setPhase("solved");
     } catch (e) {
       setError("Could not reach API. Is the backend running?");
     }
     setLoading(false);
+  };
+
+  const handleModelChange = (model) => {
+    setSelectedModel(model);
+    // Re-fetch suggestions with new model, keeping current history
+    loadSuggestion(history, model);
   };
 
   const handleWordSubmit = useCallback((word) => {
@@ -274,16 +316,17 @@ export default function App() {
     if (isWin) { setPhase("solved"); return; }
     if (newHistory.length >= 6) { setPhase("failed"); return; }
     setPhase("suggest");
-    await loadSuggestion(newHistory);
-  }, [history, pendingWord]);
+    await loadSuggestion(newHistory, selectedModel);
+  }, [history, pendingWord, selectedModel]);
 
   const handleReset = () => {
     setHistory([]); setSuggestions([]); setPendingWord("");
     setInputWord(""); setPhase("suggest"); setError("");
-    loadSuggestion([]);
+    loadSuggestion([], selectedModel);
   };
 
   const progressPct = 1 - possibleCount / 2315;
+  const accentColor = activeModel === "rl" ? "#b59f3b" : "#538d4e";
 
   return (
     <div style={{
@@ -311,13 +354,19 @@ export default function App() {
             Neural Network · Entropy Strategy
           </div>
           <h1 style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 36, margin: 0, letterSpacing: 4, color: "#ffffff" }}>
-            WORDLE<span style={{ color: "#538d4e" }}>.</span>AI
+            WORDLE<span style={{ color: accentColor }}>.</span>AI
           </h1>
-          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 10 }}>
+
+          {/* Model Toggle */}
+          <div style={{ marginTop: 16, marginBottom: 12 }}>
+            <ModelToggle selected={selectedModel} onChange={handleModelChange} />
+          </div>
+
+          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ flex: 1, height: 3, background: "#3a3a3c", borderRadius: 2, overflow: "hidden" }}>
               <div style={{
                 width: `${progressPct*100}%`, height: "100%",
-                background: "linear-gradient(90deg, #538d4e, #b59f3b)",
+                background: `linear-gradient(90deg, ${accentColor}, #b59f3b)`,
                 borderRadius: 2, transition: "width 0.6s ease",
               }} />
             </div>
@@ -329,7 +378,7 @@ export default function App() {
               color: "#818384", padding: "4px 12px", borderRadius: 4,
               fontSize: 11, cursor: "pointer", fontFamily: "inherit", letterSpacing: 1,
             }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#538d4e"}
+              onMouseEnter={e => e.currentTarget.style.borderColor = accentColor}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#3a3a3c"}
             >HOW?</button>
             <button onClick={handleReset} style={{
@@ -365,12 +414,16 @@ export default function App() {
         {/* Solved */}
         {phase === "solved" && (
           <div style={{
-            background: "#0d2b0d", border: "1px solid #538d4e", borderRadius: 10,
-            padding: "20px 24px", textAlign: "center", marginBottom: 24, boxShadow: "0 0 40px #538d4e22",
+            background: activeModel === "rl" ? "#2b250d" : "#0d2b0d",
+            border: `1px solid ${accentColor}`, borderRadius: 10,
+            padding: "20px 24px", textAlign: "center", marginBottom: 24,
+            boxShadow: `0 0 40px ${accentColor}22`,
           }}>
             <div style={{ fontSize: 32, marginBottom: 6 }}>🎉</div>
-            <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 22, color: "#538d4e", letterSpacing: 2 }}>SOLVED</div>
-            <div style={{ color: "#818384", fontSize: 13, marginTop: 4 }}>in {history.length} {history.length === 1 ? "guess" : "guesses"}</div>
+            <div style={{ fontFamily: "'Archivo Black', sans-serif", fontSize: 22, color: accentColor, letterSpacing: 2 }}>SOLVED</div>
+            <div style={{ color: "#818384", fontSize: 13, marginTop: 4 }}>
+              in {history.length} {history.length === 1 ? "guess" : "guesses"} · {activeModel === "rl" ? "🤖 RL model" : "🧠 Supervised model"}
+            </div>
           </div>
         )}
 
@@ -389,17 +442,18 @@ export default function App() {
         {phase === "suggest" && (
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 11, color: "#818384", letterSpacing: 3, marginBottom: 10, textTransform: "uppercase" }}>
-              {loading ? "Thinking…" : history.length === 0 ? "Best openers" : "AI suggestions"}
+              {loading ? "Thinking…" : history.length === 0 ? "Best openers" : `${activeModel === "rl" ? "🤖 RL" : "🧠 Supervised"} suggestions`}
             </div>
             {loading ? (
-              <div style={{ textAlign: "center", color: "#538d4e", padding: 20 }}>
+              <div style={{ textAlign: "center", color: accentColor, padding: 20 }}>
                 <div style={{ fontSize: 24, display: "inline-block", animation: "spin 1s linear infinite" }}>⟳</div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {suggestions.map((s, i) => (
                   <SuggestionCard key={s.word} rank={i+1} word={s.word} entropy={s.entropy}
-                    isPossible={s.is_possible} onClick={w => handleWordSubmit(w)} />
+                    isPossible={s.is_possible} onClick={w => handleWordSubmit(w)}
+                    modelUsed={activeModel} />
                 ))}
               </div>
             )}
@@ -426,7 +480,7 @@ export default function App() {
                 }}
               />
               <button onClick={() => handleWordSubmit(inputWord)}
-                style={{ ...btnStyle("primary"), padding: "12px 22px", fontSize: 14 }}>
+                style={{ ...btnStyle("primary"), padding: "12px 22px", fontSize: 14, background: accentColor, borderColor: accentColor }}>
                 GO
               </button>
             </div>
@@ -438,10 +492,12 @@ export default function App() {
           marginTop: 36, paddingTop: 16, borderTop: "1px solid #3a3a3c",
           fontSize: 11, color: "#565758", textAlign: "center", letterSpacing: 1,
         }}>
-          Model: supervised learning · entropy-optimal training data
+          {activeModel === "rl"
+            ? "Model: reinforcement learning · elite game filtering · 98.2% win rate"
+            : "Model: supervised learning · entropy-optimal training data · 100% win rate"}
           <div style={{ marginTop: 6 }}>
             <a href="https://github.com/Jeanwrld/wordle-solver" target="_blank" rel="noreferrer"
-              style={{ color: "#538d4e", textDecoration: "none", letterSpacing: 1 }}>
+              style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
               ⌥ github.com/Jeanwrld/wordle-solver
             </a>
           </div>
