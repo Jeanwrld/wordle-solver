@@ -500,6 +500,10 @@ export default function App() {
               style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
               ⌥ github.com/Jeanwrld/wordle-solver
             </a>
+            <a href="https://jeanwrld.github.io/" target="_blank" rel="noreferrer"
+              style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
+              ⌥ About Me
+            </a>    
           </div>
         </div>
 
