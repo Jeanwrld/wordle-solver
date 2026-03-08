@@ -130,8 +130,8 @@ function HelpModal({ onClose }) {
 // ─── Model Toggle ─────────────────────────────────────────────────────────────
 function ModelToggle({ selected, onChange }) {
   const models = [
-    { id: "supervised", label: "🧠 Supervised", sublabel: "100% · 3.46 avg" },
-    { id: "rl",         label: "🤖 Reinforcement", sublabel: "98.2% · 3.75 avg" },
+    { id: "supervised", label: "Supervised model", sublabel: "100% · 3.46 avg" },
+    { id: "rl",         label: "Reinforcement model", sublabel: "98.2% · 3.75 avg" },
   ];
   return (
     <div style={{
@@ -299,7 +299,6 @@ export default function App() {
 
   const handleModelChange = (model) => {
     setSelectedModel(model);
-    // Re-fetch suggestions with new model, keeping current history
     loadSuggestion(history, model);
   };
 
@@ -496,10 +495,20 @@ export default function App() {
             ? "Model: reinforcement learning · elite game filtering · 98.2% win rate"
             : "Model: supervised learning · entropy-optimal training data · 100% win rate"}
           <div style={{ marginTop: 6 }}>
-            <a href="https://github.com/Jeanwrld/wordle-solver" target="_blank" rel="noreferrer"
-              style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
-              ⌥ github.com/Jeanwrld/wordle-solver
-            </a>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+              <li>
+                <a href="https://github.com/Jeanwrld/wordle-solver" target="_blank" rel="noreferrer"
+                  style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
+                  ⌥ github.com/Jeanwrld/wordle-solver
+                </a>
+              </li>
+              <li>
+                <a href="https://jeanwrld.github.io/" target="_blank" rel="noreferrer"
+                  style={{ color: accentColor, textDecoration: "none", letterSpacing: 1 }}>
+                  ⌥ About Me
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
