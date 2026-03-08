@@ -417,7 +417,7 @@ export default function App() {
               <input ref={inputRef} value={inputWord}
                 onChange={e => setInputWord(e.target.value.slice(0,5))}
                 onKeyDown={e => e.key === "Enter" && handleWordSubmit(inputWord)}
-                maxLength={5} placeholder="CRANE"
+                maxLength={5} placeholder="SALET"
                 style={{
                   flex: 1, background: "#1a1a1b", border: "1px solid #3a3a3c",
                   borderRadius: 6, padding: "12px 16px", color: "#ffffff",
