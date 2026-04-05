@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-const API_BASE = "https://web-production-ea1d.up.railway.app";
+const API_BASE = "https://sato2ru-wordle-solver.hf.space";
 
 async function fetchSuggestion(history, model = "supervised") {
   const res = await fetch(`${API_BASE}/suggest?model=${model}`, {
